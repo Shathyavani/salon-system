@@ -1,0 +1,26 @@
+body {
+  background-color: #fdf6f9;
+}
+.hero {
+  background: linear-gradient(135deg, #d63384, #6f42c1);
+  color: white;
+  padding: 80px 0;
+  text-align: center;
+}
+.service-card {
+  border: none;
+  border-radius: 12px;
+  box-shadow: 0 2px 10px rgba(0, 0, 0, 0.1);
+  transition: transform 0.2s;
+}
+.service-card:hover {
+  transform: translateY(-5px);
+}
+.form-box {
+  max-width: 450px;
+  margin: 50px auto;
+  background: white;
+  padding: 30px;
+  border-radius: 12px;
+  box-shadow: 0 2px 10px rgba(0, 0, 0, 0.1);
+}
