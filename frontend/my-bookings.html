@@ -1,0 +1,106 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>My Bookings - Glow Salon</title>
+  <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/css/bootstrap.min.css" rel="stylesheet">
+  <link rel="stylesheet" href="css/style.css">
+</head>
+<body>
+  <div id="navbar"></div>
+
+  <div class="container my-5">
+    <h2 class="mb-4">My Bookings</h2>
+    <div id="message"></div>
+
+    <div class="table-responsive">
+      <table class="table table-bordered bg-white align-middle">
+        <thead class="table-dark">
+          <tr>
+            <th>Service</th>
+            <th>Staff</th>
+            <th>Date</th>
+            <th>Time</th>
+            <th>Price</th>
+            <th>Status</th>
+            <th>Action</th>
+          </tr>
+        </thead>
+        <tbody id="bookingList"></tbody>
+      </table>
+    </div>
+  </div>
+
+  <script src="js/main.js"></script>
+  <script>
+    requireLogin();
+    renderNavbar();
+
+    const badgeColors = {
+      pending: 'warning',
+      confirmed: 'success',
+      completed: 'secondary',
+      cancelled: 'danger'
+    };
+
+    async function loadBookings() {
+      try {
+        const res = await fetch(API_URL + '/appointments/my', {
+          headers: { 'Authorization': 'Bearer ' + getToken() }
+        });
+
+        if (res.status === 401) {
+          alert('Your login has expired. Please log in again.');
+          logout();
+          return;
+        }
+
+        const bookings = await res.json();
+
+        if (bookings.length === 0) {
+          document.getElementById('bookingList').innerHTML =
+            '<tr><td colspan="7" class="text-center">You have no bookings yet. <a href="services.html">Book now</a></td></tr>';
+          return;
+        }
+
+        document.getElementById('bookingList').innerHTML = bookings.map(b => `
+          <tr>
+            <td>${b.service_name}</td>
+            <td>${b.staff_name || '-'}</td>
+            <td>${b.appointment_date}</td>
+            <td>${b.start_time}</td>
+            <td>Rs. ${b.price}</td>
+            <td><span class="badge bg-${badgeColors[b.status]}">${b.status}</span></td>
+            <td>
+              ${(b.status === 'pending' || b.status === 'confirmed')
+                ? `<button class="btn btn-sm btn-outline-danger" onclick="cancelBooking(${b.id})">Cancel</button>`
+                : '-'}
+            </td>
+          </tr>`).join('');
+      } catch (err) {
+        showMessage('message', 'Cannot load bookings. Is the server running?', 'danger');
+      }
+    }
+
+    async function cancelBooking(id) {
+      if (!confirm('Are you sure you want to cancel this booking?')) return;
+
+      try {
+        const res = await fetch(`${API_URL}/appointments/${id}/cancel`, {
+          method: 'PUT',
+          headers: { 'Authorization': 'Bearer ' + getToken() }
+        });
+        const result = await res.json();
+
+        showMessage('message', result.message, res.ok ? 'success' : 'danger');
+        loadBookings();
+      } catch (err) {
+        showMessage('message', 'Cannot connect to the server', 'danger');
+      }
+    }
+
+    loadBookings();
+  </script>
+</body>
+</html>
